@@ -1,0 +1,26 @@
+id,scenario,expected,actual,detail,pass
+A1a,"Forged claims: inject tenant_id/kyc_level claims, keep original signature",DENY,DENY,HTTP 403,true
+A1b,"Forged claims: swap sub to another user (impersonation), keep original signature",DENY,DENY,HTTP 403,true
+A1c,Forged claims: alg=none unsigned token with swapped sub,DENY,DENY,HTTP 403,true
+A1d,"Forged claims: re-signed with attacker RSA key, real kid, swapped sub",DENY,DENY,HTTP 403,true
+A1e,"Forged claims: re-signed with attacker RSA key under an unknown kid, swapped sub",DENY,DENY,HTTP 403,true
+A1f,"Forged claims: signature stripped (header.payload.), alg still RS256",DENY,DENY,HTTP 403,true
+A1g,"Forged claims: algorithm confusion: HS256 signed with the pool's public key, swapped sub",DENY,DENY,HTTP 403,true
+A1h,"Forged claims: lifetime extended: exp + 24 h, original signature",DENY,DENY,HTTP 403,true
+A2a,"Cross-tenant: valid token, other tenant's path",DENY,DENY,HTTP 403,true
+A2b,"Tenant confusion: path=Meridian, header/query=Aurora",DENY,DENY,HTTP 403,true
+A2-ctl,"Control: same token, own tenant",ALLOW,ALLOW,HTTP 200,true
+A3,Replay after revocation: same token + request after status=revoked,ALLOW -> DENY,ALLOW -> DENY,HTTP 200 -> 403,true
+A7,Wrong token type: valid ID token (token_use=id) on her own tenant,DENY,DENY,HTTP 403,true
+A8a,Path tenant manipulation: case variant of her own tenant id (NEOBANK-AURORA),DENY,DENY,HTTP 403,true
+A8b,Path tenant manipulation: tenant that does not exist,DENY,DENY,HTTP 403,true
+A8c,Path tenant manipulation: encoded traversal in the tenant segment (neobank-aurora%2F..%2Fwealth-meridian),DENY,DENY,HTTP 403,true
+A8d,Path tenant manipulation: own tenant id with trailing whitespace (neobank-aurora%20),DENY,DENY,HTTP 403,true
+A9a,"Header tricks: token in ?access_token=, no Authorization header",DENY,DENY,HTTP 401,true
+A9b,Header tricks: 'Bearer <alice> <bob>' on bob's tenant,DENY,DENY,HTTP 403,true
+A9c,Header tricks: Authorization: Basic <real credentials>,DENY,DENY,HTTP 403,true
+A9d,Header tricks: alice's token + x-user-id/x-username: bob,DENY,DENY,HTTP 403,true
+A10,FINDING: session revocation: same access token after Cognito GlobalSignOut,ALLOW -> ALLOW,ALLOW -> ALLOW,Cognito GetUser on that token: rejected (NotAuthorizedException); PEP HTTP 200,true
+A10b,Control: authorisation revocation: same signed-out token after KycState status=revoked,DENY,DENY,HTTP 403,true
+A5,"Unmapped endpoint: valid admin token, route without metadata",DENY,DENY,HTTP 403,true
+A6,Missing token: no Authorization header,DENY,DENY,HTTP 401,true

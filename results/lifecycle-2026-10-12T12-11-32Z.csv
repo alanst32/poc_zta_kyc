@@ -1,0 +1,8 @@
+id,scenario,expected,actual,detail,pass
+L1,Risk boundary: 70 (= threshold) -> 71,ALLOW -> DENY,ALLOW -> DENY,at-threshold: write-to-decision 1251 ms; above-threshold: write-to-decision 117 ms,true
+L2,KYC downgrade 2 -> 1 (InitiatePayment needs L2; ViewAccounts needs L1),ALLOW -> DENY -> ALLOW,ALLOW -> DENY -> ALLOW,downgraded: write-to-decision 203 ms,true
+L3,"KYC expiry passes by time alone (expires_at = now + 5 s, no further write)",ALLOW -> DENY,ALLOW -> DENY,first DENY 0.6 s after expires_at (client clock),true
+L4,"Role grant then revoke (account_holder -> +tenant_admin -> account_holder), ManageUsers",DENY -> ALLOW -> DENY,DENY -> ALLOW -> DENY,granted: write-to-decision 116 ms; revoked: write-to-decision 71 ms,true
+L5,Offboarding: Memberships row deleted (KYC and risk rows left in place),ALLOW -> DENY,ALLOW -> DENY,offboarded: write-to-decision 83 ms,true
+L7,"Role downgrade (account_holder -> account_viewer): payments stop, viewing continues",ALLOW -> DENY -> ALLOW,ALLOW -> DENY -> ALLOW,downgraded: write-to-decision 88 ms,true
+L6,Revoke then reinstate (KycState status active -> revoked -> active),ALLOW -> DENY -> ALLOW,ALLOW -> DENY -> ALLOW,revoked: write-to-decision 82 ms; reinstated: write-to-decision 91 ms,true

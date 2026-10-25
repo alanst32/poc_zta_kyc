@@ -1,0 +1,29 @@
+id,scenario,expected,actual,detail,pass
+T1,"Own tenant, sufficient KYC (alice L2 -> Aurora InitiatePayment, needs L2)",ALLOW,ALLOW,HTTP 200,true
+T2,Cross-tenant: alice is not a member of Meridian (P1 does not permit),DENY,DENY,HTTP 403,true
+T2-ctl,Control: Meridian member (bob) on the same route,ALLOW,ALLOW,HTTP 200,true
+T3,Per-tenant KYC: alice L2 in SwiftRemit -> SendInternational (needs L3),DENY,DENY,HTTP 403,true
+T3-ctl,Control: same user in Aurora -> ViewAccounts (L1),ALLOW,ALLOW,HTTP 200,true
+T4,"Expired KYC (dave: past kyc_expires_at, status still 'active')",DENY,DENY,HTTP 403,true
+T5,Revoked relationship (erin: status=revoked in SwiftRemit),DENY,DENY,HTTP 403,true
+T5-ctl,"Control: same user, other tenant, still active (revocation is per relationship)",ALLOW,ALLOW,HTTP 200,true
+T7,"Insufficient tier (carol L1 -> InitiatePayment, needs L2)",DENY,DENY,HTTP 403,true
+T7-ctl,"Control: same user, L1 action (ViewAccounts)",ALLOW,ALLOW,HTTP 200,true
+T8,"Role boundary (alice account_holder -> ManageUsers, tenant_admin only)",DENY,DENY,HTTP 403,true
+T8-ctl,Control: tenant_admin (frank) on the same route,ALLOW,ALLOW,HTTP 200,true
+T3-ctl2,Control: L3 user (grace) on the L3 route in SwiftRemit (boundary: level == requirement),ALLOW,ALLOW,HTTP 200,true
+T9,Per-tenant KYC divergence: grace is L1 in Aurora -> InitiatePayment (needs L2),DENY,DENY,HTTP 403,true
+T9-ctl,"Control: same user, same moment, SwiftRemit (L3) -> InitiatePayment",ALLOW,ALLOW,HTTP 200,true
+T10,"KYC status 'expired' (heidi, expiry date still in the future)",DENY,DENY,HTTP 403,true
+T10-ctl,"Control: same user, other tenant, status active",ALLOW,ALLOW,HTTP 200,true
+T11a,"Several gates fail at once (ivan: L1, expired, revoked, risk 95) -> InitiatePayment",DENY,DENY,HTTP 403,true
+T11b,"Same user -> ManageUsers (L1 is enough, so P2 does not fire; P5 does)",DENY,DENY,HTTP 403,true
+T12,"Member with NO KycState and NO RiskScores row (judy, Aurora): fail closed",DENY,DENY,HTTP 403,true
+T13,"Member with KycState but NO RiskScores row (judy, SwiftRemit): unknown risk = deny",DENY,DENY,HTTP 403,true
+T14,Roles are per tenant: frank is tenant_admin in Aurora but not in SwiftRemit -> ManageUsers there,DENY,DENY,HTTP 403,true
+T15,Several roles in one tenant (ken: compliance_officer + tenant_admin) -> ManageUsers,ALLOW,ALLOW,HTTP 200,true
+G1,FINDING: account_holder (alice) -> ManageRoles (privilege escalation; intended tenant_admin only),ALLOW,ALLOW,HTTP 200,true
+G2,FINDING: account_holder (alice) -> ApprovePayment (intended payments_operator only),ALLOW,ALLOW,HTTP 200,true
+G3,FINDING: account_holder (alice) -> FreezeAccount (intended compliance_officer only),ALLOW,ALLOW,HTTP 200,true
+G4,FINDING: account_holder (alice) -> ViewKycStatus (intended compliance_officer/tenant_admin only),ALLOW,ALLOW,HTTP 200,true
+T6,"Real-time risk revocation: risk 10 -> 90 -> 10, same token",ALLOW -> DENY -> ALLOW,ALLOW -> DENY -> ALLOW,write-to-deny 396 ms (1st request after write),true
