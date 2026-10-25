@@ -1,0 +1,45 @@
+{
+  "name": "zta-experiment",
+  "version": "0.1.0",
+  "private": true,
+  "description": "PayVault: serverless zero-trust authorisation reference implementation (Cognito -> API Gateway -> Lambda PEP -> Verified Permissions/Cedar -> DynamoDB)",
+  "type": "module",
+  "dependencies": {
+    "@aws-sdk/client-cloudwatch-logs": "^3.1146.0",
+    "@aws-sdk/client-cognito-identity-provider": "^3.1146.0",
+    "@aws-sdk/client-dynamodb": "^3.1146.0",
+    "@aws-sdk/client-verifiedpermissions": "^3.1146.0",
+    "@aws-sdk/lib-dynamodb": "^3.1146.0",
+    "aws-cdk-lib": "^2.272.0",
+    "aws-jwt-verify": "^5.2.1",
+    "constructs": "^10.8.1"
+  },
+  "devDependencies": {
+    "@cedar-policy/cedar-wasm": "^4.13.0",
+    "@types/aws-lambda": "^8.10.164",
+    "@types/node": "^20.19.43",
+    "aws-cdk": "^2.1144.0",
+    "esbuild": "^0.28.2",
+    "tsx": "^4.23.15",
+    "typescript": "~5.9",
+    "vitest": "^4.1.11"
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "synth": "cdk synth",
+    "deploy": "cdk deploy --outputs-file .zta/outputs.json",
+    "destroy": "cdk destroy",
+    "seed": "tsx seed/seed.ts",
+    "test": "vitest run test/policies.test.ts test/coverage.test.ts test/infra.test.ts",
+    "test:aws": "vitest run test/correctness.test.ts test/matrix.test.ts test/lifecycle.test.ts test/attacks.test.ts",
+    "test:aws:slow": "ZTA_SLOW=1 vitest run test/attacks.test.ts",
+    "bench": "tsx bench/latency.ts",
+    "bench:revocation": "tsx bench/revocation.ts",
+    "decisions": "tsx scripts/decisions.ts",
+    "figures": "tsx scripts/figures.ts",
+    "validate": "tsx scripts/validate.ts"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

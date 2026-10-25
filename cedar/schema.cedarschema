@@ -1,0 +1,55 @@
+// PayVault: Cedar schema for the Verified Permissions policy store.
+// Matches the entity and context shape in the paper (Fv2_version1, Section 3.3.2).
+//
+// Namespace PayVault: Verified Permissions rejects a schema without a namespace, so every
+// type is PayVault::<Type> (README D11). No policy names an action: P5 applies to all of them.
+//
+//   * User.tenants: the tenants the user belongs to, built LIVE from the Memberships table.
+//   * Per-tenant relationship facts (KYC, roles, risk) are in `context`. They depend on which
+//     tenant the request addresses, so the authoriser resolves them for that tenant (from the
+//     request path, never from the token).
+//   * Each protected resource carries its requirements from the ApiMetadata row for its route,
+//     including the roles allowed to call it (allowed_roles, read by P5 for every action).
+
+namespace PayVault {
+
+  type RequestContext = {
+    kyc_level: Long,          // KycState(user, tenant).kyc_level    1 basic | 2 address+doc | 3 EDD
+    kyc_expires_at: Long,     // KycState(user, tenant).kyc_expires_at, epoch seconds
+    kyc_status: String,       // KycState(user, tenant).status       "active" | "expired" | "revoked"
+    roles: Set<String>,       // Memberships(user, tenant).roles     roles IN THAT TENANT
+    risk_score: Long,         // RiskScores(user, tenant).risk_score read live, 0-100
+    now: Long,                // authoriser clock, epoch seconds
+    token_iat: Long,          // access token's issued-at time (iat), epoch seconds           (P6)
+    tokens_valid_after: Long, // Sessions(user).tokens_valid_after: tokens issued at or before
+                              // this time were signed out (0 = never signed out)            (P6)
+  };
+
+  entity Tenant;
+
+  entity User = {
+    tenants: Set<Tenant>,
+  };
+
+  // Every protected resource has the same shape. Cedar entity shapes must be written out as
+  // record literals, hence the repetition.
+  entity Account       = { tenant: Tenant, required_kyc_level: Long, risk_threshold: Long, allowed_roles: Set<String> };
+  entity Transaction   = { tenant: Tenant, required_kyc_level: Long, risk_threshold: Long, allowed_roles: Set<String> };
+  entity Payment       = { tenant: Tenant, required_kyc_level: Long, risk_threshold: Long, allowed_roles: Set<String> };
+  entity Statement     = { tenant: Tenant, required_kyc_level: Long, risk_threshold: Long, allowed_roles: Set<String> };
+  entity Remittance    = { tenant: Tenant, required_kyc_level: Long, risk_threshold: Long, allowed_roles: Set<String> };
+  entity KycRecord     = { tenant: Tenant, required_kyc_level: Long, risk_threshold: Long, allowed_roles: Set<String> };
+  entity AdminResource = { tenant: Tenant, required_kyc_level: Long, risk_threshold: Long, allowed_roles: Set<String> };
+
+  // The action vocabulary. Per-API requirements live in ApiMetadata, not here.
+  action ViewAccounts      appliesTo { principal: User, resource: Account,       context: RequestContext };
+  action ViewTransactions  appliesTo { principal: User, resource: Transaction,   context: RequestContext };
+  action InitiatePayment   appliesTo { principal: User, resource: Payment,       context: RequestContext };
+  action ApprovePayment    appliesTo { principal: User, resource: Payment,       context: RequestContext };
+  action ExportStatements  appliesTo { principal: User, resource: Statement,     context: RequestContext };
+  action SendInternational appliesTo { principal: User, resource: Remittance,    context: RequestContext };
+  action ViewKycStatus     appliesTo { principal: User, resource: KycRecord,     context: RequestContext };
+  action FreezeAccount     appliesTo { principal: User, resource: KycRecord,     context: RequestContext };
+  action ManageUsers       appliesTo { principal: User, resource: AdminResource, context: RequestContext };
+  action ManageRoles       appliesTo { principal: User, resource: AdminResource, context: RequestContext };
+}

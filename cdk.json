@@ -1,0 +1,8 @@
+{
+  "app": "npx tsx bin/app.ts",
+  "watch": { "include": ["bin", "lib", "src", "cedar"] },
+  "context": {
+    "@aws-cdk/core:checkSecretUsage": true,
+    "@aws-cdk/aws-lambda:recognizeLayerVersion": true
+  }
+}
