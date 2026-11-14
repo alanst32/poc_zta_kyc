@@ -1,0 +1,7 @@
+node_modules/
+cdk.out/
+# stack outputs + synthetic test-user credentials (never commit)
+.zta/
+results/*.json
+*.log
+.DS_Store
