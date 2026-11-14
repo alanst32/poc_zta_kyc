@@ -22,7 +22,7 @@
     "esbuild": "^0.28.2",
     "tsx": "^4.23.15",
     "typescript": "~5.9",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.12"
   },
   "scripts": {
     "build": "tsc --noEmit",
